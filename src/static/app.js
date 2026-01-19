@@ -14,18 +14,27 @@ document.addEventListener("DOMContentLoaded", () => {
       activitiesList.innerHTML = "";
 
       // Populate activities list
+
       Object.entries(activities).forEach(([name, details]) => {
         const activityCard = document.createElement("div");
         activityCard.className = "activity-card";
 
         const spotsLeft = details.max_participants - details.participants.length;
 
-        // Create participants list HTML
-        const participantsList = details.participants.length
-          ? `<ul class="participants-list">
-              ${details.participants.map(p => `<li>${p}</li>`).join("")}
-            </ul>`
-          : `<p class="no-participants">No participants yet.</p>`;
+        // Create participants list HTML with delete icon
+        let participantsList = "";
+        if (details.participants.length) {
+          participantsList = `<ul class="participants-list">` +
+            details.participants.map(p =>
+              `<li data-activity="${encodeURIComponent(name)}" data-participant="${encodeURIComponent(p)}">
+                <span class="participant-name">${p}</span>
+                <span class="delete-participant" title="Remove participant">&#128465;</span>
+              </li>`
+            ).join("") +
+            `</ul>`;
+        } else {
+          participantsList = `<p class="no-participants">No participants yet.</p>`;
+        }
 
         activityCard.innerHTML = `
           <h4>${name}</h4>
@@ -47,31 +56,29 @@ document.addEventListener("DOMContentLoaded", () => {
         activitySelect.appendChild(option);
       });
 
-      // Add some basic styles for participants section
-      const style = document.createElement("style");
-      style.textContent = `
-        .participants-section {
-          margin-top: 10px;
-          padding: 8px;
-          background: #f6f8fa;
-          border-radius: 6px;
-        }
-        .participants-list {
-          margin: 6px 0 0 18px;
-          padding: 0;
-          color: #333;
-        }
-        .participants-list li {
-          margin-bottom: 2px;
-          font-size: 0.97em;
-        }
-        .no-participants {
-          color: #888;
-          font-style: italic;
-          margin: 6px 0 0 0;
-        }
-      `;
-      document.head.appendChild(style);
+      // Add click event for delete icons
+      activitiesList.querySelectorAll('.delete-participant').forEach(icon => {
+        icon.addEventListener('click', async function (e) {
+          const li = e.target.closest('li');
+          const activity = decodeURIComponent(li.getAttribute('data-activity'));
+          const participant = decodeURIComponent(li.getAttribute('data-participant'));
+          try {
+            const response = await fetch(`/activities/${encodeURIComponent(activity)}/unregister?email=${encodeURIComponent(participant)}`, {
+              method: 'POST',
+            });
+            if (response.ok) {
+              li.remove();
+              // Optionally show a message or refresh activities
+            } else {
+              alert('Failed to remove participant.');
+            }
+          } catch (err) {
+            alert('Error removing participant.');
+          }
+        });
+      });
+
+      // (No longer needed: styles are in styles.css)
 
     } catch (error) {
       activitiesList.innerHTML = "<p>Failed to load activities. Please try again later.</p>";
