@@ -20,11 +20,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const spotsLeft = details.max_participants - details.participants.length;
 
+        // Create participants list HTML
+        const participantsList = details.participants.length
+          ? `<ul class="participants-list">
+              ${details.participants.map(p => `<li>${p}</li>`).join("")}
+            </ul>`
+          : `<p class="no-participants">No participants yet.</p>`;
+
         activityCard.innerHTML = `
           <h4>${name}</h4>
           <p>${details.description}</p>
           <p><strong>Schedule:</strong> ${details.schedule}</p>
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+          <div class="participants-section">
+            <strong>Participants:</strong>
+            ${participantsList}
+          </div>
         `;
 
         activitiesList.appendChild(activityCard);
@@ -35,6 +46,33 @@ document.addEventListener("DOMContentLoaded", () => {
         option.textContent = name;
         activitySelect.appendChild(option);
       });
+
+      // Add some basic styles for participants section
+      const style = document.createElement("style");
+      style.textContent = `
+        .participants-section {
+          margin-top: 10px;
+          padding: 8px;
+          background: #f6f8fa;
+          border-radius: 6px;
+        }
+        .participants-list {
+          margin: 6px 0 0 18px;
+          padding: 0;
+          color: #333;
+        }
+        .participants-list li {
+          margin-bottom: 2px;
+          font-size: 0.97em;
+        }
+        .no-participants {
+          color: #888;
+          font-style: italic;
+          margin: 6px 0 0 0;
+        }
+      `;
+      document.head.appendChild(style);
+
     } catch (error) {
       activitiesList.innerHTML = "<p>Failed to load activities. Please try again later.</p>";
       console.error("Error fetching activities:", error);
